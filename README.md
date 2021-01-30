@@ -2,7 +2,7 @@
 
 Results
 =======
-<img src="images/pose.gif" width="800" height="800">
+<img src="images/pose.gif" width="500" height="500">
 
 Description of Repository
 =========================
@@ -17,7 +17,6 @@ Details of Software and Neural Network Model for Object Detection:
 The motivation for the Project
 ========================
 The goal of this project was to how well pose estimation could perform on the Raspberry Pi.
-Google provides sample TensorFlow Lite models to try on lightweight hardware like the Pi.
 Google provides code to run pose estimation on Android and IOS devices - but I wanted to write
 python code to interface with and test the model on the Pi.
 
