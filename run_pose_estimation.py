@@ -1,7 +1,7 @@
 ######## Webcam Object Detection Using Tensorflow-trained Classifier #########
 #
-# Author: Evan Juraes
-# Date: 10/27/19
+# Author: Evan Juraes and Ethan Dell
+# Date: 10/27/19 & 1/30/2021
 # Description: 
 # This program uses a TensorFlow Lite model to perform object detection on a live webcam
 # feed. It draws boxes and scores around the objects of interest in each frame from the
@@ -150,6 +150,7 @@ input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 height = input_details[0]['shape'][1]
 width = input_details[0]['shape'][2]
+#set stride to 32 based on model size
 output_stride = 32
 
 led_on = False
@@ -163,10 +164,6 @@ def mod(a, b):
     floored = np.floor_divide(a, b)
     return np.subtract(a, np.multiply(floored, b))
     
-def sigmoid(x):
-    return 1/ (1 + math.exp(-x))
-
-
 def argmax2d(inputs):
     """return y,x coordinates from heatmap"""
     #v1 is 9x9x17 heatmap
@@ -208,7 +205,6 @@ def draw_lines(keypoints, image):
     color = (0, 255, 0)
     thickness = 2
     #refernce for keypoint indexing: https://www.tensorflow.org/lite/models/pose_estimation/overview
-    #breakpoint()
     body_map = [[5,6], [5,7], [7,9], [5,11], [6,8], [8,10], [6,12], [11,12], [11,13], [13,15], [12,14], [14,16]]
     for map_pair in body_map:
         #print(f'Map pair {map_pair}')
@@ -217,16 +213,16 @@ def draw_lines(keypoints, image):
         image = cv2.line(image, start_pos, end_pos, color, thickness)
     return image
 
+#flag for debugging
 debug = True 
 
 try:
     print("Progam started - waiting for button push...")
-    #breakpoint()
     while True:
     #if True:
+        #make sure LED is off and wait for button press
         if not led_on and  not GPIO.input(17):
         #if True:
-         #if True:
             #timestamp an output directory for each capture
             outdir = pathlib.Path(args.output_path) / time.strftime('%Y-%m-%d_%H-%M-%S-%Z')
             outdir.mkdir(parents=True)
@@ -287,7 +283,7 @@ try:
      
                 frame_resized = draw_lines(keypoint_positions, frame_resized)
 
-                # Draw framerate in corner of frame
+                # Draw framerate in corner of frame - remove for small image display
                 #cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
                 #cv2.putText(frame_resized,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
 
@@ -301,7 +297,6 @@ try:
                 path = str(outdir) + '/'  + str(datetime.datetime.now()) + ".jpg"
 
                 status = cv2.imwrite(path, frame_resized)
-                #breakpoint()
 
                 # Press 'q' to quit
                 if cv2.waitKey(1) == ord('q') or led_on and not GPIO.input(17):
@@ -314,7 +309,6 @@ try:
                     time.sleep(2)
                     break
 
-#finally:
 except KeyboardInterrupt:
     # Clean up
     cv2.destroyAllWindows()
