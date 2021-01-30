@@ -1,6 +1,6 @@
 ######## Webcam Object Detection Using Tensorflow-trained Classifier #########
 #
-# Author: Evan Juras
+# Author: Evan Juraes
 # Date: 10/27/19
 # Description: 
 # This program uses a TensorFlow Lite model to perform object detection on a live webcam
@@ -12,7 +12,7 @@
 # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/examples/python/label_image.py
 #
 # I added my own method of drawing boxes and labels using OpenCV.
-# ^^^^ Credit to Evan for writing this script. I modified it to interface with a GPIO button and LED and also save out images.
+############ Credit to Evan for writing this script. I modified it to work with the PoseNet model.##### 
 
 # Import packages
 import os
@@ -45,7 +45,9 @@ class VideoStream:
     def __init__(self,resolution=(640,480),framerate=30):
         # Initialize the PiCamera and the camera image stream
         #breakpoint()
+        
         self.stream = cv2.VideoCapture(0)
+        print("Camera initiated.")
         ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         ret = self.stream.set(3,resolution[0])
         ret = self.stream.set(4,resolution[1])
@@ -148,7 +150,6 @@ input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 height = input_details[0]['shape'][1]
 width = input_details[0]['shape'][2]
-breakpoint()
 output_stride = 32
 
 led_on = False
@@ -203,29 +204,33 @@ def get_offsets(output_details, coords, num_key_points=17):
 
 def draw_lines(keypoints, image):
     """connect important body part keypoints with lines"""
-    color = (255, 0, 0)
+    #color = (255, 0, 0)
+    color = (0, 255, 0)
     thickness = 2
     #refernce for keypoint indexing: https://www.tensorflow.org/lite/models/pose_estimation/overview
-    breakpoint()
-    body_map = {5:6, 5:7, 7:9, 5:11, 6:8, 8:10, 6:12, 11:12, 11:13, 13:15, 12:14, 14:16}
-    for k, v in body.items():
-        start_pos = (keypoints[k][1], keypoints[k][0])
-        end_pos = (keypoints[v][1], keypoints[k][0])
-        cv2.line(image, start_point, end_point, color, thickness)
+    #breakpoint()
+    body_map = [[5,6], [5,7], [7,9], [5,11], [6,8], [8,10], [6,12], [11,12], [11,13], [13,15], [12,14], [14,16]]
+    for map_pair in body_map:
+        #print(f'Map pair {map_pair}')
+        start_pos = (int(keypoints[map_pair[0]][1]), int(keypoints[map_pair[0]][0]))
+        end_pos = (int(keypoints[map_pair[1]][1]), int(keypoints[map_pair[1]][0]))
+        image = cv2.line(image, start_pos, end_pos, color, thickness)
     return image
+
+debug = True 
 
 try:
     print("Progam started - waiting for button push...")
     #breakpoint()
-    #while True:
-    if True:
-        #if not led_on and  not GPIO.input(17):
-        if True:
+    while True:
+    #if True:
+        if not led_on and  not GPIO.input(17):
+        #if True:
          #if True:
             #timestamp an output directory for each capture
             outdir = pathlib.Path(args.output_path) / time.strftime('%Y-%m-%d_%H-%M-%S-%Z')
             outdir.mkdir(parents=True)
-            #GPIO.output(4, True)
+            GPIO.output(4, True)
             time.sleep(.1)
             led_on = True
             f = []
@@ -233,7 +238,6 @@ try:
             # Initialize frame rate calculation
             frame_rate_calc = 1
             freq = cv2.getTickFrequency()
-
             videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
             time.sleep(1)
 
@@ -245,7 +249,6 @@ try:
                 
                 # Grab frame from video stream
                 frame1 = videostream.read()
-
                 # Acquire frame and resize to expected shape [1xHxWx3]
                 frame = frame1.copy()
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -276,12 +279,13 @@ try:
                     y = int(keypoint_positions[i][0])
                     center_coordinates = (x, y)
                     radius = 2
-                    color = (255, 0, 0)
+                    color = (0, 255, 0)
                     thickness = 2
                     cv2.circle(frame_resized, center_coordinates, radius, color, thickness)
-                    #cv2.putText(frame_resized, str(i), (x, y-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
-                breakpoint()  
-                frame_resized = draw_lines(keypoints, frame_resized)
+                    if debug:
+                        cv2.putText(frame_resized, str(i), (x-4, y-4), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1) # Draw label text
+     
+                frame_resized = draw_lines(keypoint_positions, frame_resized)
 
                 # Draw framerate in corner of frame
                 #cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
@@ -309,10 +313,13 @@ try:
                     videostream.stop()
                     time.sleep(2)
                     break
-finally:
-    GPIO.output(4, False)
-    GPIO.cleanup()
+
+#finally:
+except KeyboardInterrupt:
     # Clean up
     cv2.destroyAllWindows()
     videostream.stop()
-    print(str(sum(f)/len(f)))
+    print('Stopped video stream.')
+    GPIO.output(4, False)
+    GPIO.cleanup()
+    #print(str(sum(f)/len(f)))
