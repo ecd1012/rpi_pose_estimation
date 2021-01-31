@@ -1,4 +1,4 @@
-# **Pose Esimation on the Raspberry Pi 4**
+# **Pose Estimation on the Raspberry Pi 4**
 
 Results
 =======
@@ -22,7 +22,7 @@ python code to interface with and test the model on the Pi.
 
 Additional Resources
 ===================
-* **YouTube Turorial For This Repository**: 
+* **YouTube Turorial For This Repository**: https://youtu.be/RUp-K4NEllg
 * **Blog Pose on Posenet**: https://medium.com/tensorflow/real-time-human-pose-estimation-in-the-browser-with-tensorflow-js-7dd0bc881cd5
 * **Pose estimation with TensorFlow Lite**:https://www.tensorflow.org/lite/models/pose_estimation/overview
 
@@ -51,10 +51,10 @@ git clone https://github.com/ecd1012/rpi_pose_estimation.git
 cd rpi_pose_estimation
 ```
 3.) Please see my other post here: https://github.com/ecd1012/rpi_road_object_detection
-And follow **Setting Up Software** Steps: 3-9 before proceding
+And follow **Setting Up Software** Steps: 3-9 before proceeding
 Here is a video of those steps: https://youtu.be/Zfmo3bMycUg
 
-4.)At this point you should have all the dependencies installed and your virtual environment activated.
+4.)At this point, you should have all the dependencies installed and your virtual environment activated.
 
 5.) Grab the sample TensorFlow Lite Posenet model from Google
 ```
@@ -63,25 +63,25 @@ wget https://storage.googleapis.com/download.tensorflow.org/models/tflite/posene
 
 Setting Up Hardware
 ===================
-<img src="images/hardware.jpg" width="300" height="400">
-3.) Please see my other post here: https://github.com/ecd1012/rpi_road_object_detection
-And follow **Setting Up Hardware** Steps: 10-12 before proceding
+6.) Please see my other post here: https://github.com/ecd1012/rpi_road_object_detection
+And follow **Setting Up Hardware** Steps: 10-12 before proceeding
 Here is a video of those steps: https://youtu.be/Zfmo3bMycUg
 
 Running Pose Estimation
 =================
-15.) After all your hardware and software is configured correctly run the following command:
+7.) After all your hardware and software is configured correctly run the following command:
 ```
 python3 TFLite_pose.py --modeldir notebooks/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite --output_path pose_images
 ```
 Where the --output_path you specify is where you want images saved.
 
-16.) The script will start running and wait for you to press the GPIO input button to start processing the video feed from the camera. 
+8.) The script will start running and wait for you to press the GPIO input button to start processing the video feed from the camera. 
 Once you press the button, the green LED will turn on and the pi will start feeding and processing the video stream through the neural network.
 Processed images will be saved to the '--output_path' you specified over the command line, with a timestamped folder for each button press.
 
-17.) If you like, make a video out of the images.
+9.) If you like, make a video out of the images.
 You can do this with gif making software, video making software, or ffmpeg.
 Help: https://stackoverflow.com/questions/24961127/how-to-create-a-video-from-images-with-ffmpeg
 Or by using gif maker software: https://ezgif.com/
+
 
