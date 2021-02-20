@@ -19,6 +19,7 @@ The motivation for the Project
 The goal of this project was to how well pose estimation could perform on the Raspberry Pi.
 Google provides code to run pose estimation on Android and IOS devices - but I wanted to write
 python code to interface with and test the model on the Pi.
+For more information checkout my medium post here: https://ecd1012.medium.com/pose-estimation-on-the-raspberry-pi-4-83a02164eb8e
 
 Additional Resources
 ===================
