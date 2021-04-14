@@ -72,7 +72,7 @@ Running Pose Estimation
 =================
 7.) After all your hardware and software is configured correctly run the following command:
 ```
-python3 TFLite_pose.py --modeldir notebooks/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite --output_path pose_images
+python3 TFLite_pose.py --modeldir posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite --output_path pose_images
 ```
 Where the --output_path you specify is where you want images saved.
 
