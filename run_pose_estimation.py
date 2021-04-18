@@ -91,7 +91,7 @@ parser.add_argument('--graph', help='Name of the .tflite file, if different than
                     default='detect.tflite')
 parser.add_argument('--labels', help='Name of the labelmap file, if different than labelmap.txt',
                     default='labelmap.txt')
-parser.add_argument('--threshold', help='Minimum confidence threshold for displaying detected objects',
+parser.add_argument('--threshold', help='Minimum confidence threshold for displaying detected keypoints (specify between 0 and 1).',
                     default=0.5)
 parser.add_argument('--resolution', help='Desired webcam resolution in WxH. If the webcam does not support the resolution entered, errors may occur.',
                     default='1280x720')
@@ -163,8 +163,12 @@ def mod(a, b):
     """find a % b"""
     floored = np.floor_divide(a, b)
     return np.subtract(a, np.multiply(floored, b))
+
+def sigmoid(x):
+    """apply sigmoid actiation to numpy array"""
+    return 1/ (1 + np.exp(-x))
     
-def argmax2d(inputs):
+def sigmoid_and_argmax2d(inputs, threshold):
     """return y,x coordinates from heatmap"""
     #v1 is 9x9x17 heatmap
     v1 = interpreter.get_tensor(output_details[0]['index'])[0]
@@ -172,6 +176,9 @@ def argmax2d(inputs):
     width = v1.shape[1]
     depth = v1.shape[2]
     reshaped = np.reshape(v1, [height * width, depth])
+    reshaped = sigmoid(reshaped)
+    #apply threshold
+    reshaped = (reshaped > threshold) * reshaped
     coords = np.argmax(reshaped, axis=0)
     yCoords = np.round(np.expand_dims(np.divide(coords, width), 1)) 
     xCoords = np.expand_dims(mod(coords, width), 1) 
@@ -199,7 +206,7 @@ def get_offsets(output_details, coords, num_key_points=17):
         offset_vectors = np.vstack((offset_vectors, get_offset_point(heatmap_y, heatmap_x, offsets, i, num_key_points)))  
     return offset_vectors
 
-def draw_lines(keypoints, image):
+def draw_lines(keypoints, image, bad_pts):
     """connect important body part keypoints with lines"""
     #color = (255, 0, 0)
     color = (0, 255, 0)
@@ -208,6 +215,8 @@ def draw_lines(keypoints, image):
     body_map = [[5,6], [5,7], [7,9], [5,11], [6,8], [8,10], [6,12], [11,12], [11,13], [13,15], [12,14], [14,16]]
     for map_pair in body_map:
         #print(f'Map pair {map_pair}')
+        if map_pair[0] in bad_pts or map_pair[1] in bad_pts:
+            continue
         start_pos = (int(keypoints[map_pair[0]][1]), int(keypoints[map_pair[0]][0]))
         end_pos = (int(keypoints[map_pair[1]][1]), int(keypoints[map_pair[1]][0]))
         image = cv2.line(image, start_pos, end_pos, color, thickness)
@@ -262,7 +271,9 @@ try:
                 interpreter.invoke()
                 
                 #get y,x positions from heatmap
-                coords = argmax2d(output_details)
+                coords = sigmoid_and_argmax2d(output_details, min_conf_threshold)
+                #keep track of keypoints that don't meet threshold
+                drop_pts = list(np.unique(np.where(coords ==0)[0]))
                 #get offets from postions
                 offset_vectors = get_offsets(output_details, coords)
                 #use stide to get coordinates in image coordinates
@@ -270,6 +281,9 @@ try:
             
                 # Loop over all detections and draw detection box if confidence is above minimum threshold
                 for i in range(len(keypoint_positions)):
+                    #don't draw low confidence points
+                    if i in drop_pts:
+                        continue
                     # Center coordinates
                     x = int(keypoint_positions[i][1])
                     y = int(keypoint_positions[i][0])
@@ -281,7 +295,7 @@ try:
                     if debug:
                         cv2.putText(frame_resized, str(i), (x-4, y-4), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1) # Draw label text
      
-                frame_resized = draw_lines(keypoint_positions, frame_resized)
+                frame_resized = draw_lines(keypoint_positions, frame_resized, drop_pts)
 
                 # Draw framerate in corner of frame - remove for small image display
                 #cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
